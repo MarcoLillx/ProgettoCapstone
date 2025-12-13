@@ -1,0 +1,46 @@
+# --- Python & Environment ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env/
+*.spec
+
+# --- IDE Settings ---
+.vscode/
+.pycharm/
+.idea/
+*.swp
+
+# --- Dataset (Troppo grandi per GitHub) ---
+# Ignora tutto dentro dataset...
+dataset/*
+# ...tranne questo file (per mantenere la cartella)
+!dataset/.gitkeep
+
+# --- Modelli Addestrati (Binari pesanti) ---
+models/*.joblib
+models/*.json
+models/*.pkl
+
+# --- Risultati Generati (Log e Report) ---
+logs/*.csv
+logs/*.txt
+
+# --- Esempi Avversari (File di testo pesanti) ---
+# Ignora i file txt dentro adv_examples e le sue sottocartelle
+adv_examples/**/*.txt
+
+# --- Figure generate ---
+# Se vuoi salvare le figure nella repo, commenta queste righe.
+# Se le rigeneri ogni volta, lasciale decommentate.
+figure/**/*.png
+figure/**/*.jpg
+
+# --- File Excel temporanei (se aperti) ---
+~$*.xlsx
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
