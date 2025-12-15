@@ -11,9 +11,8 @@ np.random.seed(SEED)
 
 # Percorsi
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_processed.csv')
-# Uncomment the following line to use the refined dataset after feature engineering
-# DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_refined.csv')
+# DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_processed.csv')
+DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_refined.csv') # UNCOMMENT the following line to use the refined dataset after running feature_engineering.py
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 ADV_DIR = os.path.join(BASE_DIR, 'adv_examples')
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
@@ -35,15 +34,16 @@ if __name__ == "__main__":
     df = pd.read_csv(DATASET_PATH)
     
     # --- PULIZIA CRITICA (DATA LEAKAGE REMOVAL) ---
-    cols_to_drop = [
-        'Label', 
-        'Attack Id', 'Attack Name', 'Attack Stat', 'Intent', 'ASD', 
-        'PLC1', 'PLC2', 'PLC3', 'PLC4', 'PLC5', 'PLC6', 
-        'P1SA1', 'Plant', 'Attack Hash'
-    ]
-    existing_cols_to_drop = [c for c in cols_to_drop if c in df.columns]
+    #cols_to_drop = [
+    #    'Label', 
+    #    'Attack Id', 'Attack Name', 'Attack Stat', 'Intent', 'ASD', 
+    #    'PLC1', 'PLC2', 'PLC3', 'PLC4', 'PLC5', 'PLC6', 
+    #    'P1SA1', 'Plant', 'Attack Hash'
+    #]
+    #existing_cols_to_drop = [c for c in cols_to_drop if c in df.columns]
     
-    X = df.drop(columns=existing_cols_to_drop).values
+    # X = df.drop(columns=existing_cols_to_drop).values
+    X = df.drop(columns=['Label']).values # UNCOMMENT this line if feature_engineering.py has been run
     y = df['Label'].values
     
     nb_features = X.shape[1]
