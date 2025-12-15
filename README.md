@@ -1,62 +1,51 @@
 # Cybersecurity Capstone Project: Adversarial Attacks on Critical Infrastructure (Water Treatment)
 
-Questo progetto è un caso di studio sulla robustezza dei sistemi di Intrusion Detection (IDS) basati su Machine Learning in scenari **Multidominio** (Cyber-Physical Systems).
+This project is a case study on the robustness of Machine Learning-based Intrusion Detection Systems (IDS) in Cyber-Physical Systems (CPS).
 
-Il lavoro replica la metodologia della tesi *"Adversarial Attacks on IDS and Multidomain Impact Analysis for Threat Intelligence in Military Automotive Scenarios"* (del Vescovo, Barletta), applicandola però al dominio delle infrastrutture critiche idriche (**Water Treatment**).
+The work replicates the methodology of the thesis *"Adversarial Attacks on IDS and Multidomain Impact Analysis for Threat Intelligence in Military Automotive Scenarios"* (Barletta & del Vescovo), applying it to the domain of critical water infrastructures (**Water Treatment**) using the **CISS 2020 (SWaT)** dataset.
 
-## Obiettivo
-Valutare l'efficacia degli attacchi **Adversarial Machine Learning (Black-Box)** contro modelli IDS addestrati sul dataset **CISS 2020 / SWaT** (Secure Water Treatment).
+## Objectives
+*   **Domain Transfer:** Verify if Black-Box attacks effective in the Automotive domain are also effective in the Water Treatment domain.
+*   **Robustness Evaluation:** Evaluate Decision Tree, Random Forest, and XGBoost models against **ZOO**, **Boundary**, **HopSkipJump**, and **Sign-OPT** attacks.
+*   **Efficiency vs. Security:** Analyze the trade-off between Feature Engineering (efficiency) and the computational cost of attacks (vulnerability).
 
-## Struttura del Progetto
-*   `src/`: Codice sorgente Python.
-    *   `pre_elaboration_ciss.py`: Pulizia, unione e preprocessing del dataset CISS.
-    *   `eda.py`: Analisi esplorativa dei dati (grafici e correlazioni).
-    *   `feature_engineering.py`: Selezione delle feature e rimozione colonne costanti.
-    *   `main.py`: Training dei modelli, esecuzione attacchi e valutazione.
-    *   `utils.py`: Funzioni di supporto e wrapper per la libreria ART.
-*   `dataset/`: Contiene i dati grezzi e processati (ignorati da git).
-*   `models/`: Modelli addestrati (.joblib).
-*   `adv_examples/`: Esempi avversari generati dagli attacchi.
-*   `figure/`: Matrici di confusione e grafici EDA.
-*   `logs/`: Report metriche in formato CSV.
+## Key Findings
+*   **Random Forest Vulnerability:** Unlike in the Automotive domain, the Random Forest model was completely bypassed by the **Sign-OPT** attack (F1-Score dropped to ~0.01), although generating the attack required significant time (~13 minutes for 50 samples).
+*   **XGBoost Resilience:** XGBoost proved to be the most balanced model, showing high resilience against geometric attacks (HopSkipJump) where other models failed.
+*   **The Security Paradox:** Removing redundant features via Feature Engineering improved training efficiency by 13% but inadvertently accelerated the generation of ZOO attacks by **28%**, reducing the defender's reaction window.
 
-## Tecnologie Utilizzate
-*   **Linguaggio:** Python 3.x
-*   **Librerie ML:** Scikit-Learn, XGBoost
+## Project Structure
+*   `src/`: Python source code.
+    *   `pre_elaboration_ciss.py`: Cleaning, merging, and initial labeling of the CISS dataset.
+    *   `eda.py`: Exploratory Data Analysis (class distribution, correlation matrices, boxplots).
+    *   `feature_engineering.py`: Advanced preprocessing, removal of constant and highly correlated features.
+    *   `main.py`: Model training, execution of adversarial attacks, and metric evaluation.
+    *   `utils.py`: Helper functions and wrappers for the Adversarial Robustness Toolbox (ART).
+    *   `plot_comparison.py`: Generates charts comparing performance and timing before/after feature engineering.
+    *   `clean.py`: Utility to reset the environment.
+*   `dataset/`: Contains raw and processed data (ignored by git).
+*   `models/`: Trained models (.joblib).
+*   `adv_examples/`: Generated adversarial examples (.txt).
+*   `figure/`: Confusion matrices and EDA plots.
+*   `logs/`: Metric reports in CSV format.
+
+## Technologies Used
+*   **Language:** Python 3.x
+*   **ML Libraries:** Scikit-Learn, XGBoost
 *   **Adversarial ML:** Adversarial Robustness Toolbox (ART)
 *   **Data Processing:** Pandas, NumPy
 
-## Istruzioni per l'uso
+## Usage Instructions
 
-### 1. Setup Ambiente
+### 1. Environment Setup
 ```bash
-# Crea ambiente virtuale
+# Create virtual environment
 python -m venv .venv
 
-# Attiva ambiente (Windows)
+# Activate environment (Windows)
 .\.venv\Scripts\Activate.ps1
-# oppure
-.venv/Scripts/activate
+# Or Linux/Mac:
+# source .venv/bin/activate
 
-# Installa dipendenze
+# Install dependencies
 pip install -r requirements.txt
-```
-
-### 2. Preparazione dati
-Scaricare il dataset **CISS 2020** e posizionare i file `.xlsx` in `dataset/CISS2020/`.
-Eseguire lo script di preprocessing:
-
-```bash
-python src/pre_elaboration_ciss.py
-```
-
-### 3. Esecuzione Attacchi
-
-Eseguire il main per addestrare i modelli (DT, RF, XGB) e lanciare gli attacchi (ZOO, Boundary, HopSkipJump, Sign-OPT):
-
-```bash
-python src/main.py
-```
-
-## Risultati Preliminari
-I modelli Random Forest e XGBoost mostrano alta accuratezza in condizioni normali, ma sono vulnerabili ad attacchi avversari mirati, in particolare Sign-OPT e HopSkipJump.
