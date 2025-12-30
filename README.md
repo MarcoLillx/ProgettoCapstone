@@ -49,3 +49,55 @@ python -m venv .venv
 
 # Install dependencies
 pip install -r requirements.txt
+```
+
+### 2. Data Preparation
+Download the CISS 2020 dataset (Target & CISS_OL Excel files) and place them in dataset/raw/.
+Run the initial preprocessing script:
+
+```bash
+python src/pre_elaboration_ciss.py
+```
+
+### 3. Exploratory Data Analysis (EDA)
+Generate analysis plots to understand class imbalance and correlations:
+```bash
+python src/eda.py
+```
+
+### 4. Feature Engineering
+Refine the dataset by removing constant and correlated features (>0.99) and creates a new dataset " `class_refined.csv` ":
+```bash
+python src/feature_engineering.py
+```
+
+### 5. Training and Attacks (Main Execution)
+Train the models (DT, RF, XGB) and execute the attacks (ZOO, Boundary, HopSkipJump, Sign-OPT):
+```bash
+python src/main.py
+```
+
+### 6. Comparison Analysis
+Generate charts to visualize the trade-off between efficiency and security:
+```bash
+python src/plot_comparison.py
+```
+
+## Results Summary (Sample)
+
+| Model | Scenario | Attack | F1-Score (Weighted) | Attack Time (50 samples) |
+| :--- | :--- | :--- | :--- | :--- |
+| **DT** | Normal | - | 0.88 | - |
+| **DT** | Adversarial | ZOO | 0.67 | **3.40s** (Fastest) |
+| **RF** | Normal | - | 0.90 | - |
+| **RF** | Adversarial | Sign-OPT | **0.011** (Failed) | 793.67s |
+| **XGB** | Normal | - | **0.91** | - |
+| **XGB** | Adversarial | HopSkipJump | **0.87** (Robust) | 8.07s |
+
+## References
+*   **Reference Thesis:** Barletta, V. S., & del Vescovo, S. (2024). *Adversarial Attacks on IDS and Multidomain Impact Analysis for Threat Intelligence in Military Automotive Scenarios*.
+*   **Dataset:** iTrust. (2020). *CISS 2020 Dataset: Critical Infrastructure Security Showdown*. Secure Water Treatment (SWaT) Testbed.
+*   **Library:** Nicolae, M. I., et al. (2018). *Adversarial Robustness Toolbox v1.0.0*.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
