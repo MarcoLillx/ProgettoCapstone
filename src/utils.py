@@ -101,60 +101,55 @@ def test_model(type_model, model, X, y, save_path_cm, prefix_cm, label_names=['N
         'Time_Test': time_elapsed
     }
 
-def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, nb_features):
+def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, nb_features, max_iter=50):
     x_test_adv = None
     start_gen = time.time()
-    print(f"[ATTACK] Starting {type_attack} on {type_attacked_model} with {len(X)} samples...")
-
-    # --- GESTIONE SPECIALE PER SIGN-OPT (Fake Multiclass Untargeted) ---
+    
+    # --- SIGN-OPT: FAKE MULTICLASS + UNTARGETED ---
     if type_attack == 'sign':
-        
         def predict_wrapper_sign(x):
             x = np.array(x, dtype=np.float32)
-            # 1. Ottieni probabilità reali (N, 2)
+            # 1. Probabilità reali (N, 2)
             if hasattr(target_model, "predict_proba"):
                 res = target_model.predict_proba(x)
             else:
                 res = to_categorical(target_model.predict(x), NB_CLASSES_REAL)
             
-            # Fix shape se necessario
             if res.ndim == 1: res = res.reshape(-1, 1)
             if res.shape[1] == 1:
                 res = np.column_stack((1.0 - res, res))
             
-            # 2. Aggiungi colonna fantasma (Classe 2 = 0.0)
+            # 2. Aggiungi classe fantasma (Prob=0) -> (N, 3)
             dummy = np.zeros((res.shape[0], 1), dtype=np.float32)
-            res_3class = np.hstack((res, dummy))
-            return res_3class
+            return np.hstack((res, dummy)).astype(np.float32)
 
-        # Inizializza BlackBoxClassifier con 3 classi
+        # Diciamo ad ART che ci sono 3 classi
         classifier = BlackBoxClassifier(
-            predict_wrapper_sign, # Funzione passata come argomento posizionale
+            predict_wrapper_sign,
             input_shape=(nb_features,),
-            nb_classes=3, # <--- TRUCCO: Diciamo che sono 3 classi
+            nb_classes=3, 
             clip_values=CLIP_VALUES
         )
 
-        # Attacco UNTARGETED (targeted=False)
-        # Sign-OPT cercherà di allontanarsi dalla classe corrente.
-        # Poiché la classe 3 ha probabilità 0, si sposterà necessariamente sull'altra classe reale.
+        # Targeted=False -> Non serve x_init. 
+        # Cercherà di uscire dalla classe corrente. L'unica via d'uscita è l'altra classe reale.
         attack = SignOPTAttack(
             estimator=classifier,
-            targeted=False, # <--- IMPORTANTE: False per evitare richiesta x_init
+            targeted=False, 
             epsilon=0.001,
             num_trial=100,
-            max_iter=50,
+            max_iter=max_iter,
             query_limit=1000, 
             k=200,
             alpha=0.2,
             beta=0.001,
             eval_perform=False,
             batch_size=64,
-            verbose=True
+            verbose=False
         )
         x_test_adv = attack.generate(X)
 
-    # --- GESTIONE STANDARD PER ALTRI ATTACCHI ---
+    # --- GESTIONE STANDARD ---
     else:
         if type_attacked_model == 'xgb':
             classifier = XGBoostClassifier(
@@ -175,7 +170,7 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 confidence=0.0, 
                 targeted=False, 
                 learning_rate=1e-1, 
-                max_iter=50,
+                max_iter=max_iter,
                 binary_search_steps=10, 
                 initial_const=1e-3, 
                 abort_early=True, 
@@ -193,11 +188,11 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 batch_size=64, 
                 targeted=False, 
                 norm='inf', 
-                max_iter=50,
+                max_iter=max_iter,
                 max_eval=10000,
                 init_eval=100, 
                 init_size=100, 
-                verbose=True
+                verbose=False
             )
             x_test_adv = attack.generate(X, x_adv_init=X)
 
@@ -208,19 +203,19 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 delta=0.01, 
                 epsilon=0.01,
                 step_adapt=0.667, 
-                max_iter=50, 
+                max_iter=max_iter,
                 num_trial=25, 
                 sample_size=20, 
                 init_size=100,
                 min_epsilon=0.0, 
-                verbose=True, 
+                verbose=False, 
                 targeted=False
             )
             x_test_adv = attack.generate(X, x_adv_init=X)
 
     end_gen = time.time()
     duration = end_gen - start_gen
-    print(f"[ATTACK] Generated {len(X)} examples in {duration:.2f} seconds.")
+    # print(f"[ATTACK] Generated {len(X)} examples in {duration:.2f} seconds.")
     
     return x_test_adv, duration
 
