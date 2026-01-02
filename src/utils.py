@@ -61,7 +61,9 @@ def train_model(type_model, X, y, seed, estimator=None):
     duration = end_train - start_train
     print(f"[TRAIN] {type_model} trained in {duration:.2f} seconds")
     
-   
+    # Store training duration on the model for optional downstream use
+    setattr(model, "train_duration", duration)
+
     return model, duration
 
 def plot_save_confMatrix(y_true, y_pred, labels, path, title):

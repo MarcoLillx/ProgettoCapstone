@@ -28,7 +28,7 @@ The work replicates the methodology of the thesis *"Adversarial Attacks on IDS a
     *   **Advanced Analysis:**
         *   `xai_analysis.py`: Runs SHAP (Explainable AI) analysis.
         *   `plot_comparison.py`: Generates charts comparing performance/timing (Processed vs Refined).
-        *   `vulnerability_advanced.py` & `plot_advanced.py`: Stress test for the Vulnerability Curve (Time vs ASR).
+        *   `vulnerability_advanced_zoo.py` & `plot_advanced_zoo.py`: Stress test for the Vulnerability Curve (Time vs ASR) for ZOO attack.
         *   `vulnerability_all.py` & `plot_all_attacks.py`: Comparative analysis of all attacks vs dimensionality.
         *   `transferability.py` & `plot_transferability.py`: Gray-Box attack analysis (Source: DT -> Target: RF/XGB).
     *   **Defenses:**
