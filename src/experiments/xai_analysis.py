@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from joblib import load
 
 # Configurazione
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_refined.csv')
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 ADV_DIR = os.path.join(BASE_DIR, 'adv_examples')

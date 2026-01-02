@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 # Configurazione Percorsi
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FIGURE_DIR = os.path.join(BASE_DIR, 'figure', 'comparison')
 os.makedirs(FIGURE_DIR, exist_ok=True)
 

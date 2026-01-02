@@ -1,12 +1,16 @@
 import pandas as pd
 import numpy as np
+import sys
 import os
+# Add src to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from utils import train_model, generate_adv_examples
 
 # Configurazione
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_refined.csv')
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 SEED = 42

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Configurazione
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_processed.csv')
 FIGURE_DIR = os.path.join(BASE_DIR, 'figure', 'eda')
 
