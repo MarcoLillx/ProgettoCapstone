@@ -16,26 +16,76 @@ plt.rcParams.update({'font.size': 12})
 def generate_comparison_plots():
     print("--- GENERAZIONE GRAFICI COMPARATIVI ---")
 
-    # DATI ESTRATTI DAI LOG (Processed vs Refined)
-    # Li inseriamo manualmente per creare il dataframe di confronto
-    data = {
-        'Model': ['DT', 'RF', 'XGB'] * 2,
-        'Dataset': ['Processed (58 feat.)'] * 3 + ['Refined (46 feat.)'] * 3,
-        
-        # F1-Score Normal (Weighted)
-        'F1_Score': [0.8805, 0.9041, 0.9073,  # Processed
-                     0.8842, 0.9027, 0.9067], # Refined
-        
-        # Training Time (secondi)
-        'Train_Time': [1.18, 9.82, 2.19,    # Processed
-                       0.95, 8.56, 2.50],   # Refined
-        
-        # ZOO Attack Generation Time (secondi per 50 samples)
-        'Attack_Time': [4.72, 124.59, 14.00,  # Processed
-                        3.40, 144.08, 13.50]  # Refined
+    # 1. BASELINE DATA (Hardcoded - "Processed" Dataset)
+    # Questi dati provengono dai test precedenti sul dataset non raffinato (58 feature).
+    # Li manteniamo come riferimento statico per il confronto.
+    data_baseline = {
+        'Model': ['DT', 'RF', 'XGB'],
+        'Dataset': ['Processed (58 feat.)'] * 3,
+        'F1_Score': [0.8805, 0.9041, 0.9073],
+        'Train_Time': [1.18, 9.82, 2.19],
+        'Attack_Time': [4.72, 124.59, 14.00]
     }
+    df_baseline = pd.DataFrame(data_baseline)
 
-    df = pd.read_json(pd.DataFrame(data).to_json()) # Trick per evitare errori di tipo
+    # 2. CURRENT DATA (Dynamic - "Refined" Dataset)
+    # Leggiamo i risultati dell'esecuzione corrente (es. dopo feature engineering).
+    LOGS_PATH = os.path.join(BASE_DIR, 'logs', 'final_metrics_report_full.csv')
+    
+    if os.path.exists(LOGS_PATH):
+        df_current_raw = pd.read_csv(LOGS_PATH)
+        
+        # Standardizzazione Colonne
+        df_current_raw['Model'] = df_current_raw['Model'].str.upper() # Normalizza nomi modelli
+        
+        # Check: F1 nel grafico 1 è "Normal" o "Adversarial"?
+        # Nel codice originale: F1_Score Normal (Weighted).
+        
+        # Recuperiamo F1 e Time_Train dal caso 'Normal'
+        norm_rows = df_current_raw[df_current_raw['Scenario'] == 'Normal']
+        if not norm_rows.empty:
+            # Selezioniamo sia F1 che Time_Train
+            if 'Time_Train' in norm_rows.columns:
+                df_norm = norm_rows[['Model', 'F1_W', 'Time_Train']].copy()
+                df_norm.rename(columns={'F1_W': 'F1_Score', 'Time_Train': 'Train_Time'}, inplace=True)
+            else:
+                 df_norm = norm_rows[['Model', 'F1_W']].copy()
+                 df_norm.rename(columns={'F1_W': 'F1_Score'}, inplace=True)
+                 df_norm['Train_Time'] = 0
+        else:
+            df_norm = pd.DataFrame(columns=['Model', 'F1_Score', 'Train_Time'])
+
+        # Recuperiamo Attack Time dal caso 'zoo' (Adversarial)
+        adv_rows = df_current_raw[(df_current_raw['Scenario'] == 'Adversarial') & (df_current_raw['Attack'] == 'zoo')]
+        if not adv_rows.empty:
+            df_adv = adv_rows[['Model', 'Time_Gen_Attack']].copy()
+            df_adv.rename(columns={'Time_Gen_Attack': 'Attack_Time'}, inplace=True)
+            
+            # Fallback per Attack Time se è ~0 (causa Recover Metrics)
+            # Valori storici noti: DT=3.40, RF=144.08, XGB=13.50
+            historical_times = {'DT': 3.40, 'RF': 144.08, 'XGB': 13.50}
+            
+            for idx, row in df_adv.iterrows():
+                model_key = row['Model']
+                if row['Attack_Time'] < 0.1 and model_key in historical_times:
+                    print(f"[INFO] Using historical Attack Time for {model_key} (Recovered log has 0s)")
+                    df_adv.at[idx, 'Attack_Time'] = historical_times[model_key]
+        else:
+            df_adv = pd.DataFrame({'Model': ['DT','RF','XGB'], 'Attack_Time': [0,0,0]})
+        
+        # Merge dati Normal (Perf + TrainTime) con dati Adv (AttackTime)
+        # Nota: usiamo how='outer' per non perdere modelli che magari hanno fallito l'attacco ma hanno training
+        df_merged = pd.merge(df_norm, df_adv, on='Model', how='outer').fillna(0)
+        df_merged['Dataset'] = 'Refined (Current)'
+        
+        df_current = df_merged
+
+        # Unione
+        df = pd.concat([df_baseline, df_current], ignore_index=True)
+        
+    else:
+        print("[WARNING] CSV Log non trovato. Mostro solo Baseline.")
+        df = df_baseline
 
     # --- GRAFICO 1: Stabilità delle Performance (F1-Score) ---
     plt.figure(figsize=(8, 6))

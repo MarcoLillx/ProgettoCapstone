@@ -7,8 +7,9 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 # --- CONFIGURAZIONE ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Inserisci qui il percorso dove hai salvato i file Excel scaricati
-RAW_DATA_DIR = r"C:\Users\pasqu\Desktop\ProgettoCapstone\dataset\CISS 2020"
+RAW_DATA_DIR = os.path.join(BASE_DIR, 'dataset', 'CISS 2020')
 OUTPUT_FILE = r"dataset\ciss_processed.csv"
 SCALER_FILE = r"dataset\scaler.pkl"
 
