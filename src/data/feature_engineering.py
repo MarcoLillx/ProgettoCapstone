@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 # Configurazione
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 INPUT_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_processed.csv')
 OUTPUT_PATH = os.path.join(BASE_DIR, 'dataset', 'ciss_refined.csv')
 

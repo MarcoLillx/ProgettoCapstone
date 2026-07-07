@@ -73,7 +73,7 @@ if __name__ == "__main__":
         model_path = os.path.join(MODELS_DIR, f"{m_name}_ciss.joblib")
         
         # Addestramento
-        model = train_model(m_name, X_A, y_A, SEED)
+        model, time_train = train_model(m_name, X_A, y_A, SEED)
         dump(model, model_path)
         trained_models[m_name] = model
         
@@ -88,7 +88,7 @@ if __name__ == "__main__":
             prefix_cm="Normal"
         )
         
-        res_entry = {'Model': m_name, 'Scenario': 'Normal', 'Attack': 'None'}
+        res_entry = {'Model': m_name, 'Scenario': 'Normal', 'Attack': 'None', 'Time_Train': time_train}
         res_entry.update(metrics_norm)
         final_results.append(res_entry)
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     print("\n=== FINAL REPORT ===")
     res_df = pd.DataFrame(final_results)
     
-    cols = ['Model', 'Scenario', 'Attack', 'Precision_W', 'Recall_W', 'F1_W', 'Overall_Acc', 'Average_Acc', 'Time_Test', 'Time_Gen_Attack', 'Cosine_Similarity']
+    cols = ['Model', 'Scenario', 'Attack', 'Precision_W', 'Recall_W', 'F1_W', 'Overall_Acc', 'Average_Acc', 'Time_Test', 'Time_Train', 'Time_Gen_Attack', 'Cosine_Similarity']
     cols = [c for c in cols if c in res_df.columns]
     res_df = res_df[cols]
     

@@ -58,8 +58,13 @@ def train_model(type_model, X, y, seed, estimator=None):
         model.fit(X, y)
 
     end_train = time.time()
-    print(f"[TRAIN] {type_model} trained in {end_train - start_train:.2f} seconds")
-    return model
+    duration = end_train - start_train
+    print(f"[TRAIN] {type_model} trained in {duration:.2f} seconds")
+    
+    # Store training duration on the model for optional downstream use
+    setattr(model, "train_duration", duration)
+
+    return model, duration
 
 def plot_save_confMatrix(y_true, y_pred, labels, path, title):
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
@@ -105,11 +110,10 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
     x_test_adv = None
     start_gen = time.time()
     
-    # --- SIGN-OPT: FAKE MULTICLASS + UNTARGETED ---
+    # --- GESTIONE SPECIALE PER SIGN-OPT (Fake Multiclass) ---
     if type_attack == 'sign':
         def predict_wrapper_sign(x):
             x = np.array(x, dtype=np.float32)
-            # 1. Probabilità reali (N, 2)
             if hasattr(target_model, "predict_proba"):
                 res = target_model.predict_proba(x)
             else:
@@ -119,11 +123,9 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
             if res.shape[1] == 1:
                 res = np.column_stack((1.0 - res, res))
             
-            # 2. Aggiungi classe fantasma (Prob=0) -> (N, 3)
             dummy = np.zeros((res.shape[0], 1), dtype=np.float32)
             return np.hstack((res, dummy)).astype(np.float32)
 
-        # Diciamo ad ART che ci sono 3 classi
         classifier = BlackBoxClassifier(
             predict_wrapper_sign,
             input_shape=(nb_features,),
@@ -131,8 +133,6 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
             clip_values=CLIP_VALUES
         )
 
-        # Targeted=False -> Non serve x_init. 
-        # Cercherà di uscire dalla classe corrente. L'unica via d'uscita è l'altra classe reale.
         attack = SignOPTAttack(
             estimator=classifier,
             targeted=False, 
@@ -149,7 +149,7 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
         )
         x_test_adv = attack.generate(X)
 
-    # --- GESTIONE STANDARD ---
+    # --- ALTRI ATTACCHI ---
     else:
         if type_attacked_model == 'xgb':
             classifier = XGBoostClassifier(
@@ -170,7 +170,7 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 confidence=0.0, 
                 targeted=False, 
                 learning_rate=1e-1, 
-                max_iter=max_iter,
+                max_iter=max_iter, 
                 binary_search_steps=10, 
                 initial_const=1e-3, 
                 abort_early=True, 
@@ -188,7 +188,7 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 batch_size=64, 
                 targeted=False, 
                 norm='inf', 
-                max_iter=max_iter,
+                max_iter=max_iter, 
                 max_eval=10000,
                 init_eval=100, 
                 init_size=100, 
@@ -203,7 +203,7 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
                 delta=0.01, 
                 epsilon=0.01,
                 step_adapt=0.667, 
-                max_iter=max_iter,
+                max_iter=max_iter, 
                 num_trial=25, 
                 sample_size=20, 
                 init_size=100,
@@ -215,7 +215,6 @@ def generate_adv_examples(type_attack, target_model, X, y, type_attacked_model, 
 
     end_gen = time.time()
     duration = end_gen - start_gen
-    # print(f"[ATTACK] Generated {len(X)} examples in {duration:.2f} seconds.")
     
     return x_test_adv, duration
 
